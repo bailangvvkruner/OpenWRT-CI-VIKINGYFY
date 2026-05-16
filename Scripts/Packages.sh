@@ -26,7 +26,7 @@ UPDATE_PACKAGE() {
 				echo "Delete directory: $DIR"
 			done <<< "$FOUND_DIRS"
 		else
-			echo "Not fonud directory: $NAME"
+			echo "Not found directory: $NAME"
 		fi
 	done
 
