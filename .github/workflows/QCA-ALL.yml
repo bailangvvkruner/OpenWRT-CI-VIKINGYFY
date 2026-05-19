@@ -6,12 +6,16 @@ name: QCA-ALL
 
 #CI计划
 on:
-  # #自动编译：当Auto-Clean运行完成后
-  # workflow_run:
-  #   workflows: ["Auto-Clean"]
-  #   types:
-  #     - completed
-  #手动编译
+  # 推送自动触发
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/WRT-CORE.yml'
+      - '.github/workflows/QCA-ALL.yml'
+      - 'Scripts/**'
+      - 'Config/IPQ60XX*.txt'
+      - 'Config/GENERAL.txt'
+  # 手动触发
   workflow_dispatch:
     inputs:
       PACKAGE:
