@@ -193,6 +193,7 @@ jobs:
       - name: Compile Firmware
         if: env.WRT_TEST != 'true'
         run: |
+          set -eo pipefail
           cd ./wrt/
 
           # -j16 适配自托管 Runner 36C16G（36核16GB），防止 OOM
