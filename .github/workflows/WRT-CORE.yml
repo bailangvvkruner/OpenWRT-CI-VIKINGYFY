@@ -193,9 +193,28 @@ jobs:
       - name: Compile Firmware
         if: env.WRT_TEST != 'true'
         run: |
+          set -eo pipefail
           cd ./wrt/
 
-          make -j$(nproc) || make -j1 V=s
+          # 限制并行度防止 OOM，自托管 Runner 36C16G
+          # -j16 适配 16GB 内存，-l$(nproc) 负载保护
+          make -j16 -l$(nproc) || make -j1 V=s
+
+      - name: Build Error Diagnostics
+        if: failure() && env.WRT_TEST != 'true'
+        run: |
+          echo "=== Compilation Failed — Diagnostics ==="
+          echo "--- Disk Usage (/mnt/build_wrt) ---"
+          df -h /mnt/build_wrt 2>/dev/null || df -h ./
+          echo "--- Memory Info ---"
+          free -h
+          echo "--- Failed Package Logs (last errors) ---"
+          find ./wrt/build_dir/ ./wrt/staging_dir/ -maxdepth 5 -name "*.log" -newer ./wrt/Makefile 2>/dev/null | while IFS= read -r f; do
+            if grep -q "Error\|error:" "$f" 2>/dev/null; then
+              echo ">>> $f"
+              grep "Error\|error:" "$f" | tail -5
+            fi
+          done || echo "(no build logs with errors found)"
 
       - name: Machine Information
         run: |
