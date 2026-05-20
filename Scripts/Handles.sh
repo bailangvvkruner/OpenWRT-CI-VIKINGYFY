@@ -109,4 +109,22 @@ if [ -d "$QCA_SSDK" ]; then
 	rm -rf "$QCA_SSDK"
 	cd $PKG_PATH && echo "qca-ssdk package removed!"
 fi
+
+#移除所有NSS相关包（codelinaro.org git archive hash不匹配， cascading failures）
+#qca-nss-dp在package/kernel/（in-tree），其他在feeds/nss_packages/
+NSS_PKGS=(
+	"$PKG_PATH/kernel/qca-nss-dp"
+	"../feeds/nss_packages/qca-nss-drv"
+	"../feeds/nss_packages/qca-nss-crypto"
+	"../feeds/nss_packages/qca-nss-clients"
+	"../feeds/nss_packages/qca-nss-ecm"
+)
+for pkg in "${NSS_PKGS[@]}"; do
+	if [ -d "$pkg" ]; then
+		echo " "
+		rm -rf "$pkg"
+		echo "Removed NSS package: $(basename $pkg)"
+	fi
+done
+cd $PKG_PATH && echo "All NSS packages removed!"
 # trigger
