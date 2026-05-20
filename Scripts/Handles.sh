@@ -92,3 +92,36 @@ if [ -f "$RUST_FILE" ]; then
 
 	cd $PKG_PATH && echo "rust has been fixed!"
 fi
+
+#修复lm-sensors上游Makefile $(shell ...)嵌套括号问题
+#patch 100-Fix-iconv-linking-detection引入的$(shell ...)含iconv_open("UTF-8","ASCII")
+#嵌套圆括号在旧版GNU Make上解析失败: "unterminated call to function 'shell': missing ')'"
+#musl和glibc都内置iconv，无需-liconv检测，直接设为空即可
+LM_PATCH_DIR="../feeds/packages/utils/lm-sensors/patches"
+if [ -d "$LM_PATCH_DIR" ]; then
+	echo " "
+
+	cat > "$LM_PATCH_DIR/101-Fix-shell-nested-parentheses.patch" << 'EOF'
+--- a/Makefile
++++ b/Makefile
+@@ -174,13 +174,3 @@ ALL_LDFLAGS := $(LDFLAGS)
+
+ ifndef LIBICONV
+-  ICONV_TEST := $(shell printf '%s\n' \
+-    '#include <iconv.h>' \
+-    'int main() { iconv_t cd = iconv_open("UTF-8", "ASCII"); return 0; }' \
+-    | $(CC) $(ALL_CPPFLAGS) -x c - -o /tmp/lm_sensors_iconv_test 2>/dev/null && echo "builtin" || echo "external")
+-
+-  ifeq ($(ICONV_TEST),builtin)
+-    LIBICONV :=
+-  else
+-    LIBICONV := -liconv
+-  endif
+-
+-  $(shell rm -f /tmp/lm_sensors_iconv_test)
++  LIBICONV :=
+ endif
+EOF
+
+	cd $PKG_PATH && echo "lm-sensors shell detect has been fixed!"
+fi
