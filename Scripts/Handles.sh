@@ -101,3 +101,11 @@ if [ -d "$LM_PATCH_DIR" ]; then
 	rm -f "$LM_PATCH_DIR/100-Fix-iconv-linking-detection-for-glibc-based-builds.patch"
 	cd $PKG_PATH && echo "lm-sensors 100 patch deleted!"
 fi
+
+#移除qca-ssdk（git源码hash不匹配，且config=n被defconfig覆盖）
+QCA_SSDK="$PKG_PATH/kernel/qca-ssdk"
+if [ -d "$QCA_SSDK" ]; then
+	echo " "
+	rm -rf "$QCA_SSDK"
+	cd $PKG_PATH && echo "qca-ssdk package removed!"
+fi
