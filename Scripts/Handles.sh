@@ -94,18 +94,50 @@ if [ -f "$RUST_FILE" ]; then
 fi
 
 #修复lm-sensors上游Makefile $(shell ...)嵌套括号问题
-#patch 100-Fix-iconv-linking-detection中的$(shell ...)含iconv_open("UTF-8","ASCII")
-#嵌套圆括号在旧版GNU Make上解析失败: "unterminated call to function 'shell': missing ')'"
-#直接修改100号patch本体，将iconv检测块替换为简单赋值（musl/glibc都内置iconv）
+#原100 patch的$(shell ...)含iconv_open("UTF-8","ASCII")的嵌套圆括号
+#旧版GNU Make无法正确解析: "unterminated call to function 'shell': missing ')'"
+#重写patch: 替换为简单LIBICONV:=赋值（musl/glibc都内置iconv）
 LM_100_PATCH="../feeds/packages/utils/lm-sensors/patches/100-Fix-iconv-linking-detection-for-glibc-based-builds.patch"
 if [ -f "$LM_100_PATCH" ]; then
 	echo " "
 
-	sed -i '/^+# Determine iconv/,/^+endif$/c\
-+# iconv detect disabled: nested parens in shell{} breaks older GNU Make\
-+ifndef LIBICONV\
-+  LIBICONV :=\
-+endif' "$LM_100_PATCH"
+	cat > "$LM_100_PATCH" << 'EOF'
+From 2c14facc904d531ae9ae98705322916668793784 Mon Sep 17 00:00:00 2001
+From: graysky <therealgraysky AT proton DOT me>
+Date: Sat, 16 Aug 2025 07:01:21 -0400
+Subject: [PATCH] Fix iconv linking detection for glibc-based builds
+X-Patch-By: https://github.com/openwrt/packages/commit/2c14facc904d531ae9ae98705322916668793784
+
+musl和glibc都内置iconv，无需-liconv链接。直接设为空跳过检测，
+避免$(shell ...)嵌套括号在旧版GNU Make上解析失败。
+
+--- a/Makefile
++++ b/Makefile
+@@ -171,6 +171,11 @@ LIBCFLAGS := -fpic -D_REENTRANT $(ALL_CF
+ 
+ ALL_LDFLAGS := $(LDFLAGS)
+ 
++# Determine iconv linking requirements
++# glibc and musl both include iconv in libc, no separate linking needed
++ifndef LIBICONV
++  LIBICONV :=
++endif
++
+ EXLDFLAGS := -Wl,-rpath,$(LIBDIR) $(ALL_LDFLAGS)
+ 
+ .PHONY: all user clean install user_install uninstall user_uninstall
+--- a/prog/sensors/Module.mk
++++ b/prog/sensors/Module.mk
+@@ -39,7 +39,7 @@ REMOVESENSORSBIN := $(patsubst $(MODULE_
+ REMOVESENSORSMAN := $(patsubst $(MODULE_DIR)/%,$(DESTDIR)$(PROGSENSORSMAN1DIR)/%,$(PROGSENSORSMANFILES))
+ REMOVESENSORSZSH := $(patsubst $(MODULE_DIR)/%,$(DESTDIR)$(ZSHCOMPDIR)/%,$(PROGSENSORSZSHCOMPFILES))
+ 
+-LIBICONV := $(shell if /sbin/ldconfig -p | grep -q '/libiconv\.so$$' ; then echo \-liconv; else echo; fi)
++LIBICONV :=
+ 
+ $(PROGSENSORSTARGETS): $(PROGSENSORSSOURCES:.c=.ro) lib/$(LIBDEP_FOR_PROGS)
+ 	$(CC) $(EXLDFLAGS) -o $@ $(PROGSENSORSSOURCES:.c=.ro) $(LIBICONV) -Llib -lsensors -lm
+EOF
 
 	cd $PKG_PATH && echo "lm-sensors shell detect has been fixed!"
 fi
