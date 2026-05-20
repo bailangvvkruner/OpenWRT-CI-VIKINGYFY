@@ -195,15 +195,14 @@ jobs:
         run: |
           cd ./wrt/
 
-          # 限制并行度防止 OOM，自托管 Runner 36C16G
-          # -j16 适配 16GB 内存，-l$(nproc) 负载保护
-          # 输出全部日志到文件，失败时自动退出
-          make -j16 -l$(nproc) 2>&1 | tee /tmp/build.log
+          # -j16 适配自托管 Runner 36C16G（36核16GB），防止 OOM
+          # V=s 详细输出，全部日志到文件用于失败诊断
+          make -j16 -l$(nproc) V=s 2>&1 | tee /tmp/build.log
           status=${PIPESTATUS[0]}
           if [ $status -ne 0 ]; then
             echo "=== Build failed with exit code $status ==="
-            echo "=== Last 50 lines of build output ==="
-            tail -50 /tmp/build.log
+            echo "=== Searching for error messages in build log ==="
+            grep -E "(Error|error:|make\[.*\]\s*\*|\+\+\+|\-\-\-)" /tmp/build.log | tail -30
             exit $status
           fi
 
