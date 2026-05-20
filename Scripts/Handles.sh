@@ -104,8 +104,10 @@ if [ -d "$LM_PATCH_DIR" ]; then
 	cat > "$LM_PATCH_DIR/101-Fix-shell-nested-parentheses.patch" << 'EOF'
 --- a/Makefile
 +++ b/Makefile
-@@ -174,13 +174,3 @@ ALL_LDFLAGS := $(LDFLAGS)
-
+@@ -171,17 +171,7 @@ ALL_LDFLAGS := $(LDFLAGS)
+ 
+-# Determine iconv linking requirements
+-# glibc has built-in iconv, other libc implementations may need -liconv
  ifndef LIBICONV
 -  ICONV_TEST := $(shell printf '%s\n' \
 -    '#include <iconv.h>' \
