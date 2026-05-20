@@ -69,6 +69,8 @@ if [[ "${WRT_TARGET^^}" == *"QUALCOMMAX"* ]]; then
 	echo "CONFIG_PACKAGE_kmod-usb-serial-qualcomm=y" >> ./.config
 	#禁用lm-sensors（上游Makefile语法错误，被autocore依赖拉入）
 	echo "CONFIG_PACKAGE_lm-sensors=n" >> ./.config
+	#禁用qca-ssdk（git源码哈希不匹配）
+	echo "CONFIG_PACKAGE_qca-ssdk=n" >> ./.config
 
 	#无WIFI配置调整Q6大小
 	if [[ "${WRT_CONFIG,,}" == *"wifi"* && "${WRT_CONFIG,,}" == *"no"* ]]; then
