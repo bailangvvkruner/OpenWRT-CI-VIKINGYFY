@@ -109,3 +109,4 @@ if [ -d "$QCA_SSDK" ]; then
 	rm -rf "$QCA_SSDK"
 	cd $PKG_PATH && echo "qca-ssdk package removed!"
 fi
+# trigger
