@@ -202,8 +202,14 @@ jobs:
           status=${PIPESTATUS[0]}
           if [ $status -ne 0 ]; then
             echo "=== Build failed with exit code $status ==="
-            echo "=== Searching for error messages in build log ==="
-            grep -E "(Error|error:|make\[.*\]\s*\*|\+\+\+|\-\-\-)" /tmp/build.log | tail -30
+            echo "=== CRITICAL: Last 5 make errors ==="
+            grep -E 'make\[[0-9]+\]: \*\*\*' /tmp/build.log | grep -v '(ignored)' | tail -5
+            echo "=== CRITICAL: Last 5 Hash mismatch errors ==="
+            grep 'Hash mismatch' /tmp/build.log | tail -5
+            echo "=== CRITICAL: Last 5 Download failed ==="
+            grep 'Download failed' /tmp/build.log | tail -5
+            echo "=== CRITICAL: Package being built at failure ==="
+            grep -E 'make\[[0-9]+\]: Leaving directory|make\[[0-9]+\]: Entering directory' /tmp/build.log | tail -10
             exit $status
           fi
 
